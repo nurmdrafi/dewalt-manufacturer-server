@@ -19,30 +19,41 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
-    try {
-      await client.connect();
-      // Collections
-      const productsCollection = client.db("dewalt_DB").collection("products");
-  
-      // Get all products
-      app.get("/product", async (req, res) => {
-        const query = req.query;
-        const products = await productsCollection.find(query).toArray();
-        console.log("mongodb connected");
-        res.send(products);
-      });
+  try {
+    await client.connect();
+    // Collections
+    const productsCollection = client.db("dewalt_DB").collection("products");
 
-      // Add new product
-      app.post("/add-product", async(req, res) =>{
-          const data = req.body;
-          const addedProduct = await productsCollection.insertOne(data);
-          res.send(addedProduct)
-      })
-    } finally {
-      //   await client.close();
-    }
+    // Get all products
+    // http://localhost:5000/product
+    app.get("/product", async (req, res) => {
+      const query = req.query;
+      const products = await productsCollection.find(query).toArray();
+      console.log("mongodb connected");
+      res.send(products);
+    });
+    
+    // Get product by id
+    // http://localhost:5000/product:id
+    app.get("/product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const product = await productsCollection.find(query).toArray();
+      res.send(product);
+    });
+
+    // Add new product
+    //   http://localhost:5000/add-product
+    app.post("/add-product", async (req, res) => {
+      const data = req.body;
+      const addedProduct = await productsCollection.insertOne(data);
+      res.send(addedProduct);
+    });
+  } finally {
+    //   await client.close();
   }
-  run().catch(console.dir);
+}
+run().catch(console.dir);
 
 // for testing
 app.get("/", (req, res) => {
