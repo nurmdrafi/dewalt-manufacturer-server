@@ -34,7 +34,7 @@ async function run() {
     });
     
     // Get product by id
-    // http://localhost:5000/product:id
+    // http://localhost:5000/product/:id
     app.get("/product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -49,6 +49,14 @@ async function run() {
       const addedProduct = await productsCollection.insertOne(data);
       res.send(addedProduct);
     });
+
+    // Delete product by id
+    app.delete("/product/:id", async (req, res) =>{
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const deletedProduct = await productsCollection.deleteOne(query);
+      res.send(deletedProduct);
+    })
   } finally {
     //   await client.close();
   }
