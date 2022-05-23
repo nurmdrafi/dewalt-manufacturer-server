@@ -25,6 +25,7 @@ async function run() {
     // Collections
     const productCollection = client.db("dewalt_DB").collection("products");
     const reviewCollection = client.db("dewalt_DB").collection("reviews");
+    const orderCollection = client.db("dewalt_DB").collection("orders");
 
     // Get all products
     // http://localhost:5000/product
@@ -69,7 +70,7 @@ async function run() {
       res.send(reviews);
     })
 
-    // Add review
+    // Add Review
     // http://localhost:5000/add-review
     app.post("/add-review", async (req, res) => {
       const data = req.body;
@@ -77,7 +78,22 @@ async function run() {
       res.send(insertedReview);
     });
 
+    // Add Order
+    // http://localhost:5000/add-order
+    app.post("/add-order", async (req, res) =>{
+      const data = req.body;
+      const insertedOrder = await orderCollection.insertOne(data);
+      res.send(insertedOrder)
+    })
 
+    // Get order by email
+    app.get("/order/:email", async(req, res) =>{
+      const email = req.params.email;
+      const query = {email: email};
+      const order = await orderCollection.find(query).toArray();
+      res.send(order)
+
+    })
   } finally {
     //   await client.close();
   }
