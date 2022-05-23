@@ -18,6 +18,22 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// Verify Token
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "UnAuthorized Access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden Access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     await client.connect();
@@ -26,6 +42,20 @@ async function run() {
     const productCollection = client.db("dewalt_DB").collection("products");
     const reviewCollection = client.db("dewalt_DB").collection("reviews");
     const orderCollection = client.db("dewalt_DB").collection("orders");
+    const userCollection = client.db("dewalt_DB").collection("users");
+
+    // Verify Admin
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "Forbidden Access" });
+      }
+    };
 
     // Get all products
     // http://localhost:5000/product
@@ -64,11 +94,11 @@ async function run() {
 
     // Get all Reviews
     // http://localhost:5000/reviews
-    app.get("/reviews", async(req, res) =>{
+    app.get("/reviews", async (req, res) => {
       const query = req.query;
       const reviews = await reviewCollection.find(query).toArray();
       res.send(reviews);
-    })
+    });
 
     // Add Review
     // http://localhost:5000/add-review
@@ -80,20 +110,19 @@ async function run() {
 
     // Add Order
     // http://localhost:5000/add-order
-    app.post("/add-order", async (req, res) =>{
+    app.post("/add-order", async (req, res) => {
       const data = req.body;
       const insertedOrder = await orderCollection.insertOne(data);
-      res.send(insertedOrder)
-    })
+      res.send(insertedOrder);
+    });
 
     // Get order by email
-    app.get("/order/:email", async(req, res) =>{
+    app.get("/order/:email", async (req, res) => {
       const email = req.params.email;
-      const query = {email: email};
+      const query = { email: email };
       const order = await orderCollection.find(query).toArray();
-      res.send(order)
-
-    })
+      res.send(order);
+    });
   } finally {
     //   await client.close();
   }
