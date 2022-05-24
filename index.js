@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 5000;
@@ -63,13 +63,12 @@ async function run() {
     app.get("/product", async (req, res) => {
       const query = req.query;
       const products = await productCollection.find(query).toArray();
-      console.log("mongodb connected");
       res.send(products);
     });
 
     // Get product by id
     // http://localhost:5000/product/${_id}
-    app.get("/product/:id", async (req, res) => {
+    app.get("/product/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const product = await productCollection.find(query).toArray();
@@ -78,7 +77,7 @@ async function run() {
 
     // Add new product
     // http://localhost:5000/add-product
-    app.post("/add-product", async (req, res) => {
+    app.post("/add-product", verifyJWT, verifyAdmin, async (req, res) => {
       const data = req.body;
       const addedProduct = await productCollection.insertOne(data);
       res.send(addedProduct);
@@ -86,7 +85,7 @@ async function run() {
 
     // Delete product by id
     // http://localhost:5000/product/${selectedId}
-    app.delete("/product/:id", async (req, res) => {
+    app.delete("/product/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const deletedProduct = await productCollection.deleteOne(query);
@@ -103,7 +102,7 @@ async function run() {
 
     // Add Review
     // http://localhost:5000/add-review
-    app.post("/add-review", async (req, res) => {
+    app.post("/add-review", verifyJWT, async (req, res) => {
       const data = req.body;
       const insertedReview = await reviewCollection.insertOne(data);
       res.send(insertedReview);
@@ -111,14 +110,14 @@ async function run() {
 
     // Add Order
     // http://localhost:5000/add-order
-    app.post("/add-order", async (req, res) => {
+    app.post("/add-order", verifyJWT, async (req, res) => {
       const data = req.body;
       const insertedOrder = await orderCollection.insertOne(data);
       res.send(insertedOrder);
     });
 
     // Get order by email
-    app.get("/order/:email", async (req, res) => {
+    app.get("/order/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const order = await orderCollection.find(query).toArray();
@@ -146,30 +145,30 @@ async function run() {
 
     // Get all users
     // http://localhost:5000/user
-    app.get('/user', verifyJWT, async (req, res) => {
+    app.get("/user", async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
 
     // Make User to Admin
-    app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+    // http://localhost:5000/user/admin/${email}
+    app.put("/user/admin/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
       const updateDoc = {
-        $set: { role: 'admin' },
+        $set: { role: "admin" },
       };
       const result = await userCollection.updateOne(filter, updateDoc);
       res.send(result);
-    })
+    });
 
     // Get access if role is Admin
-    app.get('/admin/:email', async (req, res) => {
+    app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
-      const isAdmin = user.role === 'admin';
-      res.send({ admin: isAdmin })
-    })
-
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
   } finally {
     //   await client.close();
   }
