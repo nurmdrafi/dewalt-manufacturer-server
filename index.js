@@ -145,9 +145,24 @@ async function run() {
 
     // Get all users
     // http://localhost:5000/user
-    app.get("/user", async (req, res) => {
+    app.get("/user", verifyJWT, verifyAdmin, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
+    });
+
+    // Update user profile
+    // http://localhost:5000/update-user/${email}
+    app.put("/update-user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      console.log(email, user);
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
     });
 
     // Make User to Admin
