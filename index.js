@@ -116,12 +116,40 @@ async function run() {
       res.send(insertedOrder);
     });
 
-    // Get order by email
-    app.get("/order/:email", verifyJWT, async (req, res) => {
+    // Get All orders
+    // http://localhost:5000/orders
+    app.get("/orders", verifyJWT, verifyAdmin, async (req, res) =>{
+      const orders = await orderCollection.find().toArray();
+      res.send(orders)
+    })
+
+    // Get orders by email
+    // http://localhost:5000/orders/${email}
+    app.get("/orders/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const query = { email: email };
+      const query = { userEmail: email };
       const order = await orderCollection.find(query).toArray();
       res.send(order);
+    });
+
+    // Get order by id
+    // http://localhost:5000/order/${_id}
+    app.get("/order/:_id", verifyJWT, async (req, res) => {
+      const id = req.params._id;
+      const query = { _id: id };
+      const order = await orderCollection.findOne(query);
+      res.send(order);
+    });
+
+    // Delete Order by Id
+    // http://localhost:5000/order/${selectedId}
+    app.delete("/delete-order/:selectedId", verifyJWT, async (req, res) => {
+      const id = req.params.selectedId;
+      console.log("id:", id);
+      const filter = { _id: id };
+      const deletedOrder = await orderCollection.deleteOne(filter);
+      console.log(deletedOrder);
+      res.send(deletedOrder);
     });
 
     // Issue Token + set userCollection
@@ -144,18 +172,25 @@ async function run() {
     });
 
     // Get all users
-    // http://localhost:5000/user
-    app.get("/user", verifyJWT, verifyAdmin, async (req, res) => {
+    // http://localhost:5000/users
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
 
+    // Get user by email
+    app.get("/user/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      res.send(user);
+    });
+
     // Update user profile
     // http://localhost:5000/update-user/${email}
-    app.put("/update-user/:email", async (req, res) => {
+    app.put("/update-user/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const user = req.body;
-      console.log(email, user);
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
