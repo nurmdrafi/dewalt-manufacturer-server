@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 5000;
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require("dotenv").config();
 
 // use middleware
@@ -118,10 +118,10 @@ async function run() {
 
     // Get All orders
     // http://localhost:5000/orders
-    app.get("/orders", verifyJWT, verifyAdmin, async (req, res) =>{
+    app.get("/orders", verifyJWT, verifyAdmin, async (req, res) => {
       const orders = await orderCollection.find().toArray();
-      res.send(orders)
-    })
+      res.send(orders);
+    });
 
     // Get orders by email
     // http://localhost:5000/orders/${email}
@@ -218,6 +218,20 @@ async function run() {
       const user = await userCollection.findOne({ email: email });
       const isAdmin = user.role === "admin";
       res.send({ admin: isAdmin });
+    });
+
+    // Stripe
+    // http://localhost:5000/create-payment-intent
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const service = req.body;
+      const price = service.price;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({ clientSecret: paymentIntent.client_secret });
     });
   } finally {
     //   await client.close();
