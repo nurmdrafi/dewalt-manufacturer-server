@@ -1,6 +1,6 @@
-# Website Name: Delware Manufacturer & Supplier
+# Website Name: Dewalt Manufacturer & Supplier
 ### Live: https://dewalt-manufacturer.web.app/
-### Description: This is an electric power tools manufacturer website. User can place order, manage his/her order, checkout with atm card also update his profile and add review. Admin has full control of products, orders also on users.
+### Description: This is a full stack website for electric power tools manufacture & supply products built with MERN stack and Daisy UI for the design that allows users to place orders, checkout using stripe payment gateway, etc. also included dynamic dashboard functionality based on user role.
 ### Features and Functionality:
 - Server side deployed at Heroku
 - Client side deployed at Firebase
