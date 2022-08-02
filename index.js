@@ -6,9 +6,8 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const ObjectId = require("mongodb").ObjectId;
 const port = process.env.PORT || 5000;
 const Stripe = require("stripe");
-const stripe = Stripe(
-  "sk_test_51L3eBnFxrq41hmwKKWlFViV6qx5L8L4DljZkjefc2szdD6uAwYxyuDFCekP9bjRN6Ia3YgEsfSxkSsX0R13iOy1G00168BV52K"
-);
+const stripe = Stripe(`${process.env.STRIPE_SECRET_KEY}`);
+
 require("dotenv").config();
 
 // use middleware
@@ -140,10 +139,8 @@ async function run() {
     // http://localhost:5000/order/${_id}
     app.get("/order/:_id", verifyJWT, async (req, res) => {
       const id = req.params._id;
-      console.log(id)
       const query = { _id: ObjectId(id) };
       const order = await orderCollection.findOne(query);
-      console.log(order)
       res.send(order);
     });
 
@@ -153,7 +150,6 @@ async function run() {
       const id = req.params.selectedId;
       const filter = { _id: ObjectId(id) };
       const deletedOrder = await orderCollection.deleteOne(filter);
-      console.log(deletedOrder);
       res.send(deletedOrder);
     });
 
@@ -193,7 +189,7 @@ async function run() {
     });
 
     // http://localhost:5000/delivery/${id}
-    app.put("/delivery/:_id",verifyJWT, verifyAdmin, async(req, res) =>{
+    app.put("/delivery/:_id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params._id;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true };
@@ -208,7 +204,7 @@ async function run() {
         options
       );
       res.send(deliveredOrder);
-    })
+    });
 
     // Issue Token + set userCollection
     // http://localhost:5000/user/${email}
